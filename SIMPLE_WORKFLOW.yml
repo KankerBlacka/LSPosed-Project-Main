@@ -1,0 +1,59 @@
+name: Build LSPosed Module APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allow manual builds
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --no-daemon
+        
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: lsposed-module-debug-apk
+        path: app/build/outputs/apk/debug/app-debug.apk
+        
+    - name: Build Success Summary
+      run: |
+        echo "### 🎉 LSPosed Module Build Complete!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ **Status**: Build Successful" >> $GITHUB_STEP_SUMMARY
+        echo "📦 **APK Size**: $(du -h app/build/outputs/apk/debug/app-debug.apk | cut -f1)" >> $GITHUB_STEP_SUMMARY
+        echo "⬇️ **Download**: Check the 'Artifacts' section below" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📱 Installation Instructions" >> $GITHUB_STEP_SUMMARY
+        echo "1. Download the APK from artifacts" >> $GITHUB_STEP_SUMMARY
+        echo "2. Install on your Android device" >> $GITHUB_STEP_SUMMARY
+        echo "3. Enable in LSPosed Manager" >> $GITHUB_STEP_SUMMARY
+        echo "4. Select target apps and reboot" >> $GITHUB_STEP_SUMMARY
