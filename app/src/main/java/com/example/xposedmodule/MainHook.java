@@ -14,38 +14,41 @@ public class MainHook implements IXposedHookLoadPackage {
     
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-        // Log that module is loaded
-        XposedBridge.log(TAG + ": Module loaded for: " + lpparam.packageName);
+        // ALWAYS log - this will tell us if module is loaded at all
+        XposedBridge.log(TAG + ": ===== MODULE IS LOADING =====");
+        XposedBridge.log(TAG + ": Package: " + lpparam.packageName);
+        XposedBridge.log(TAG + ": Process: " + lpparam.processName);
+        XposedBridge.log(TAG + ": ==============================");
         
-        // Test with Sword Master
-        if (lpparam.packageName.equals("com.superplanet.swordmaster")) {
-            XposedBridge.log(TAG + ": SWORD MASTER DETECTED!");
-            
-            // Simple hook - just show toast when any activity starts
+        // Hook EVERYTHING temporarily to test
+        try {
             XposedHelpers.findAndHookMethod(Activity.class, "onCreate", android.os.Bundle.class, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     Activity activity = (Activity) param.thisObject;
-                    XposedBridge.log(TAG + ": Activity: " + activity.getClass().getSimpleName());
+                    String packageName = activity.getPackageName();
                     
-                    // Show toast
-                    Toast.makeText(activity, "SWORD MASTER MOD ACTIVE!", Toast.LENGTH_LONG).show();
+                    XposedBridge.log(TAG + ": Activity in " + packageName + ": " + activity.getClass().getSimpleName());
+                    
+                    // Show toast for Sword Master
+                    if (packageName.equals("com.superplanet.swordmaster")) {
+                        Toast.makeText(activity, "SWORD MASTER MOD ACTIVE!", Toast.LENGTH_LONG).show();
+                        XposedBridge.log(TAG + ": SWORD MASTER TOAST SHOWN!");
+                    }
+                    
+                    // Show toast for any app to test
+                    if (packageName.contains("sword") || packageName.contains("superplanet")) {
+                        Toast.makeText(activity, "MODULE DETECTED: " + packageName, Toast.LENGTH_SHORT).show();
+                        XposedBridge.log(TAG + ": DETECTED PACKAGE: " + packageName);
+                    }
                 }
             });
-        }
-        
-        // TEMPORARY: Test with SystemUI to verify module works at all
-        if (lpparam.packageName.equals("com.android.systemui")) {
-            XposedBridge.log(TAG + ": SYSTEMUI DETECTED - Testing module...");
             
-            XposedHelpers.findAndHookMethod(Activity.class, "onCreate", android.os.Bundle.class, new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                    Activity activity = (Activity) param.thisObject;
-                    XposedBridge.log(TAG + ": SystemUI Activity: " + activity.getClass().getSimpleName());
-                    Toast.makeText(activity, "MODULE WORKS!", Toast.LENGTH_SHORT).show();
-                }
-            });
+            XposedBridge.log(TAG + ": Hook installed successfully!");
+            
+        } catch (Exception e) {
+            XposedBridge.log(TAG + ": ERROR: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

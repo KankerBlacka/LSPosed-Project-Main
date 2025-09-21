@@ -30,8 +30,8 @@ public class MainActivity extends AppCompatActivity {
             testButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // Test floating window directly
-                    testFloatingWindow();
+                    // Test if module is working
+                    testModule();
                 }
             });
         }
@@ -86,49 +86,21 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     
-    private void testFloatingWindow() {
-        try {
-            android.view.WindowManager windowManager = (android.view.WindowManager) getSystemService(WINDOW_SERVICE);
-            
-            // Create simple test view
-            android.widget.TextView testView = new android.widget.TextView(this);
-            testView.setText("🎮 TEST WINDOW");
-            testView.setTextColor(0xFFFFFFFF);
-            testView.setTextSize(16);
-            testView.setBackgroundColor(0x80000000);
-            testView.setPadding(20, 10, 20, 10);
-            
-            // Window parameters
-            android.view.WindowManager.LayoutParams params = new android.view.WindowManager.LayoutParams();
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                params.type = android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-            } else {
-                params.type = android.view.WindowManager.LayoutParams.TYPE_PHONE;
-            }
-            
-            params.flags = android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-            params.format = android.graphics.PixelFormat.TRANSLUCENT;
-            params.width = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
-            params.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
-            params.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
-            params.x = 50;
-            params.y = 200;
-            
-            windowManager.addView(testView, params);
-            
-            // Remove after 5 seconds
-            new android.os.Handler().postDelayed(() -> {
-                try {
-                    windowManager.removeView(testView);
-                } catch (Exception e) {
-                    // Ignore
-                }
-            }, 5000);
-            
-            android.widget.Toast.makeText(this, "Test window created!", android.widget.Toast.LENGTH_SHORT).show();
-            
-        } catch (Exception e) {
-            android.widget.Toast.makeText(this, "Error: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
-        }
+    private void testModule() {
+        // Simple test to show module info
+        StringBuilder info = new StringBuilder();
+        info.append("Module Package: ").append(getPackageName()).append("\n");
+        info.append("Target: com.superplanet.swordmaster\n");
+        info.append("Architecture: ").append(android.os.Build.SUPPORTED_ABIS[0]).append("\n");
+        info.append("Android Version: ").append(android.os.Build.VERSION.RELEASE).append("\n");
+        info.append("SDK: ").append(android.os.Build.VERSION.SDK_INT).append("\n\n");
+        info.append("If you see this, the module app is working.\n");
+        info.append("Check LSPosed logs for module loading messages.");
+        
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Module Test")
+               .setMessage(info.toString())
+               .setPositiveButton("OK", null)
+               .show();
     }
 }
