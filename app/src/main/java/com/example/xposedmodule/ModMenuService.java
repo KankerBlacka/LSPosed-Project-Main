@@ -48,6 +48,14 @@ public class ModMenuService extends Service {
         if (isMenuVisible) return;
         
         try {
+            // Check for overlay permission
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!android.provider.Settings.canDrawOverlays(this)) {
+                    Toast.makeText(this, "Overlay permission required! Please grant permission in settings.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+            }
+            
             LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
             floatingView = inflater.inflate(R.layout.floating_mod_menu, null);
             
@@ -81,6 +89,7 @@ public class ModMenuService extends Service {
         } catch (Exception e) {
             // Log error and show toast
             Toast.makeText(this, "Failed to show mod menu: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
         }
     }
     

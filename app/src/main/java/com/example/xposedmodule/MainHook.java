@@ -34,11 +34,18 @@ public class MainHook implements IXposedHookLoadPackage {
     private boolean shouldHookPackage(String packageName) {
         // Define which packages you want to hook
         // Avoid hooking too many packages to prevent performance issues
-        return packageName.equals("com.android.systemui") || 
-               packageName.equals("android") ||
-               packageName.contains("com.example") || // Hook your test apps
-               packageName.contains("com.tencent.tmgp") || // Example game package
-               packageName.contains("com.miHoYo"); // Example game package
+        
+        // Log all package names to help debug
+        XposedBridge.log(TAG + ": Checking package: " + packageName);
+        
+        // Target specific game: Sword Master
+        boolean shouldHook = packageName.equals("com.superplanet.swordmaster");
+        
+        if (shouldHook) {
+            XposedBridge.log(TAG + ": ✓ TARGET GAME DETECTED: " + packageName);
+        }
+        
+        return shouldHook;
     }
     
     private void hookSystemUI(XC_LoadPackage.LoadPackageParam lpparam) {
@@ -96,7 +103,9 @@ public class MainHook implements IXposedHookLoadPackage {
     
     private void hookModMenuTrigger(XC_LoadPackage.LoadPackageParam lpparam) {
         try {
-            // Hook into Activity.onCreate to show mod menu when target app starts
+            XposedBridge.log(TAG + ": Setting up mod menu trigger for Sword Master: " + lpparam.packageName);
+            
+            // Hook into Activity.onCreate to show mod menu when Sword Master starts
             XposedHelpers.findAndHookMethod("android.app.Activity", lpparam.classLoader, "onCreate", 
                 android.os.Bundle.class, new XC_MethodHook() {
                 @Override
@@ -104,20 +113,30 @@ public class MainHook implements IXposedHookLoadPackage {
                     android.app.Activity activity = (android.app.Activity) param.thisObject;
                     Context context = activity.getApplicationContext();
                     
-                    // Show mod menu after a short delay to ensure the activity is fully loaded
+                    XposedBridge.log(TAG + ": Sword Master Activity onCreate: " + activity.getClass().getSimpleName());
+                    
+                    // Show mod menu after a short delay to ensure the game is fully loaded
                     new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                         try {
-                            ModMenuService.showMenu(context);
-                            XposedBridge.log(TAG + ": Mod menu triggered for: " + lpparam.packageName);
+                            XposedBridge.log(TAG + ": 🎮 SWORD MASTER DETECTED - Showing mod menu!");
+                            
+                            // Start the service first
+                            Intent serviceIntent = new Intent(context, ModMenuService.class);
+                            serviceIntent.setAction("SHOW_MENU");
+                            context.startService(serviceIntent);
+                            
+                            XposedBridge.log(TAG + ": ✅ Mod menu service started for Sword Master");
                         } catch (Exception e) {
-                            XposedBridge.log(TAG + ": Error showing mod menu: " + e.getMessage());
+                            XposedBridge.log(TAG + ": ❌ Error showing mod menu: " + e.getMessage());
+                            e.printStackTrace();
                         }
-                    }, 1000); // 1 second delay
+                    }, 3000); // 3 second delay for game to fully load
                 }
             });
             
         } catch (Exception e) {
-            XposedBridge.log(TAG + ": Error hooking mod menu trigger: " + e.getMessage());
+            XposedBridge.log(TAG + ": Error hooking Sword Master mod menu trigger: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

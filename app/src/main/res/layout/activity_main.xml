@@ -47,7 +47,16 @@
                 android:text="Module Status: Ready"
                 android:textSize="14sp"
                 android:gravity="center"
-                android:textColor="@android:color/holo_green_dark" />
+                android:textColor="@android:color/holo_green_dark"
+                android:layout_marginBottom="16dp" />
+
+            <Button
+                android:id="@+id/testModMenuButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Test Mod Menu"
+                android:textSize="14sp"
+                android:padding="12dp" />
 
         </LinearLayout>
 

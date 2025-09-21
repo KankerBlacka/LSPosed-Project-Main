@@ -1,6 +1,8 @@
 package com.example.xposedmodule;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -20,6 +22,18 @@ public class MainActivity extends AppCompatActivity {
         } else {
             statusText.setText("⚠ Module Status: LSPosed Framework not detected");
             statusText.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
+        }
+        
+        // Add test button for mod menu
+        Button testButton = findViewById(R.id.testModMenuButton);
+        if (testButton != null) {
+            testButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Test the mod menu directly
+                    ModMenuService.showMenu(MainActivity.this);
+                }
+            });
         }
     }
     

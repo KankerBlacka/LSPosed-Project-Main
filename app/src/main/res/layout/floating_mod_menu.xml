@@ -43,7 +43,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="LSPosed Module Active"
+        android:text="Sword Master Mod Menu"
         android:textColor="#FFFFFF"
         android:textSize="12sp"
         android:gravity="center"
@@ -54,7 +54,7 @@
         android:id="@+id/testButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Test Button"
+        android:text="Sword Master Mods"
         android:textColor="#FFFFFF"
         android:textSize="12sp"
         android:gravity="center"
