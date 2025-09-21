@@ -10,103 +10,88 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 public class MainHook implements IXposedHookLoadPackage {
     
-    private static final String TAG = "TestModule";
+    private static final String TAG = "SwordMasterMod";
     
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
-        // ALWAYS log - this will tell us if module is loaded at all
-        XposedBridge.log(TAG + ": ===== MODULE IS LOADING =====");
+        // Log EVERYTHING
+        XposedBridge.log(TAG + ": ===== MODULE LOADED =====");
         XposedBridge.log(TAG + ": Package: " + lpparam.packageName);
         XposedBridge.log(TAG + ": Process: " + lpparam.processName);
-        XposedBridge.log(TAG + ": ==============================");
+        XposedBridge.log(TAG + ": =========================");
         
-        // Hook EVERYTHING temporarily to test
-        try {
-            XposedHelpers.findAndHookMethod(Activity.class, "onCreate", android.os.Bundle.class, new XC_MethodHook() {
-                @Override
-                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                    Activity activity = (Activity) param.thisObject;
-                    String packageName = activity.getPackageName();
-                    
-                    XposedBridge.log(TAG + ": Activity in " + packageName + ": " + activity.getClass().getSimpleName());
-                    
-                    // Show toast for Sword Master with delay
-                    if (packageName.equals("com.superplanet.swordmaster")) {
-                        XposedBridge.log(TAG + ": SWORD MASTER ACTIVITY DETECTED!");
+        // Hook Sword Master
+        if (lpparam.packageName.equals("com.superplanet.swordmaster")) {
+            XposedBridge.log(TAG + ": SWORD MASTER DETECTED!");
+            
+            // Hook Application.onCreate - this is more reliable than Activity.onCreate
+            try {
+                XposedHelpers.findAndHookMethod("android.app.Application", lpparam.classLoader, "onCreate", new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        XposedBridge.log(TAG + ": Application.onCreate called!");
                         
-                        // Use Handler to show toast on main thread
-                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                            try {
-                                Toast.makeText(activity, "SWORD MASTER MOD ACTIVE!", Toast.LENGTH_LONG).show();
-                                XposedBridge.log(TAG + ": SWORD MASTER TOAST SHOWN!");
-                                
-                                // Also create a simple floating window
-                                createFloatingWindow(activity);
-                                
-                            } catch (Exception e) {
-                                XposedBridge.log(TAG + ": Toast error: " + e.getMessage());
-                            }
-                        }, 1000);
+                        // Get context from application
+                        android.content.Context context = (android.content.Context) param.thisObject;
+                        
+                        // Show toast immediately
+                        Toast.makeText(context, "SWORD MASTER MOD ACTIVE!", Toast.LENGTH_LONG).show();
+                        XposedBridge.log(TAG + ": Toast shown!");
+                        
+                        // Also log to system log
+                        android.util.Log.i(TAG, "SWORD MASTER MOD IS ACTIVE!");
                     }
-                    
-                    // Show toast for any app to test
-                    if (packageName.contains("sword") || packageName.contains("superplanet")) {
-                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                            try {
-                                Toast.makeText(activity, "MODULE DETECTED: " + packageName, Toast.LENGTH_SHORT).show();
-                                XposedBridge.log(TAG + ": DETECTED PACKAGE: " + packageName);
-                            } catch (Exception e) {
-                                XposedBridge.log(TAG + ": Toast error: " + e.getMessage());
-                            }
-                        }, 500);
-                    }
-                }
-            });
-            
-            XposedBridge.log(TAG + ": Hook installed successfully!");
-            
-        } catch (Exception e) {
-            XposedBridge.log(TAG + ": ERROR: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    private void createFloatingWindow(Activity activity) {
-        try {
-            XposedBridge.log(TAG + ": Creating floating window...");
-            
-            android.view.WindowManager windowManager = (android.view.WindowManager) activity.getSystemService(android.content.Context.WINDOW_SERVICE);
-            
-            // Create simple floating view
-            android.widget.TextView floatingView = new android.widget.TextView(activity);
-            floatingView.setText("🎮 Sword Master Mod");
-            floatingView.setTextColor(0xFFFFFFFF);
-            floatingView.setTextSize(16);
-            floatingView.setBackgroundColor(0x80000000);
-            floatingView.setPadding(20, 10, 20, 10);
-            
-            // Window parameters
-            android.view.WindowManager.LayoutParams params = new android.view.WindowManager.LayoutParams();
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                params.type = android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-            } else {
-                params.type = android.view.WindowManager.LayoutParams.TYPE_PHONE;
+                });
+                
+                XposedBridge.log(TAG + ": Application hook installed!");
+                
+            } catch (Exception e) {
+                XposedBridge.log(TAG + ": Application hook failed: " + e.getMessage());
             }
             
-            params.flags = android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-            params.format = android.graphics.PixelFormat.TRANSLUCENT;
-            params.width = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
-            params.height = android.view.WindowManager.LayoutParams.WRAP_CONTENT;
-            params.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
-            params.x = 50;
-            params.y = 100;
+            // Also hook Activity.onCreate as backup
+            try {
+                XposedHelpers.findAndHookMethod(Activity.class, "onCreate", android.os.Bundle.class, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        Activity activity = (Activity) param.thisObject;
+                        XposedBridge.log(TAG + ": Activity: " + activity.getClass().getSimpleName());
+                        
+                        // Show toast
+                        Toast.makeText(activity, "ACTIVITY HOOKED!", Toast.LENGTH_SHORT).show();
+                        XposedBridge.log(TAG + ": Activity toast shown!");
+                    }
+                });
+                
+                XposedBridge.log(TAG + ": Activity hook installed!");
+                
+            } catch (Exception e) {
+                XposedBridge.log(TAG + ": Activity hook failed: " + e.getMessage());
+            }
+        }
+        
+        // TEMPORARY: Test with SystemUI to verify module works
+        if (lpparam.packageName.equals("com.android.systemui")) {
+            XposedBridge.log(TAG + ": SYSTEMUI DETECTED - Testing module...");
             
-            windowManager.addView(floatingView, params);
-            XposedBridge.log(TAG + ": Floating window created!");
-            
-        } catch (Exception e) {
-            XposedBridge.log(TAG + ": Floating window error: " + e.getMessage());
-            e.printStackTrace();
+            try {
+                XposedHelpers.findAndHookMethod(Activity.class, "onCreate", android.os.Bundle.class, new XC_MethodHook() {
+                    @Override
+                    protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                        Activity activity = (Activity) param.thisObject;
+                        XposedBridge.log(TAG + ": SystemUI Activity: " + activity.getClass().getSimpleName());
+                        
+                        // Show toast
+                        Toast.makeText(activity, "MODULE WORKS!", Toast.LENGTH_SHORT).show();
+                        XposedBridge.log(TAG + ": SystemUI toast shown!");
+                    }
+                });
+                
+                XposedBridge.log(TAG + ": SystemUI hook installed!");
+                
+            } catch (Exception e) {
+                XposedBridge.log(TAG + ": SystemUI hook failed: " + e.getMessage());
+            }
         }
     }
 }
