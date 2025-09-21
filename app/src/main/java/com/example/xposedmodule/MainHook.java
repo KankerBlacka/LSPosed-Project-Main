@@ -1,5 +1,7 @@
 package com.example.xposedmodule;
 
+import android.content.Context;
+import android.content.Intent;
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
@@ -25,6 +27,7 @@ public class MainHook implements IXposedHookLoadPackage {
         if (shouldHookPackage(lpparam.packageName)) {
             XposedBridge.log(TAG + ": Hooking general methods for: " + lpparam.packageName);
             hookGeneralMethods(lpparam);
+            hookModMenuTrigger(lpparam);
         }
     }
     
@@ -33,7 +36,9 @@ public class MainHook implements IXposedHookLoadPackage {
         // Avoid hooking too many packages to prevent performance issues
         return packageName.equals("com.android.systemui") || 
                packageName.equals("android") ||
-               packageName.contains("com.example"); // Hook your test apps
+               packageName.contains("com.example") || // Hook your test apps
+               packageName.contains("com.tencent.tmgp") || // Example game package
+               packageName.contains("com.miHoYo"); // Example game package
     }
     
     private void hookSystemUI(XC_LoadPackage.LoadPackageParam lpparam) {
@@ -86,6 +91,33 @@ public class MainHook implements IXposedHookLoadPackage {
             
         } catch (Exception e) {
             XposedBridge.log(TAG + ": Error hooking general methods: " + e.getMessage());
+        }
+    }
+    
+    private void hookModMenuTrigger(XC_LoadPackage.LoadPackageParam lpparam) {
+        try {
+            // Hook into Activity.onCreate to show mod menu when target app starts
+            XposedHelpers.findAndHookMethod("android.app.Activity", lpparam.classLoader, "onCreate", 
+                android.os.Bundle.class, new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    android.app.Activity activity = (android.app.Activity) param.thisObject;
+                    Context context = activity.getApplicationContext();
+                    
+                    // Show mod menu after a short delay to ensure the activity is fully loaded
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                        try {
+                            ModMenuService.showMenu(context);
+                            XposedBridge.log(TAG + ": Mod menu triggered for: " + lpparam.packageName);
+                        } catch (Exception e) {
+                            XposedBridge.log(TAG + ": Error showing mod menu: " + e.getMessage());
+                        }
+                    }, 1000); // 1 second delay
+                }
+            });
+            
+        } catch (Exception e) {
+            XposedBridge.log(TAG + ": Error hooking mod menu trigger: " + e.getMessage());
         }
     }
 }
