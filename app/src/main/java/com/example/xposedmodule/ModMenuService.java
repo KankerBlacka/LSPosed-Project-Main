@@ -15,7 +15,7 @@ import android.widget.Toast;
 
 public class ModMenuService extends Service {
     
-    private static final String TAG = "ModMenuService";
+    private static final String TAG = "SwordMasterMod";
     private WindowManager windowManager;
     private View floatingView;
     private boolean isMenuVisible = false;
@@ -48,18 +48,12 @@ public class ModMenuService extends Service {
         if (isMenuVisible) return;
         
         try {
-            // Check for overlay permission
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (!android.provider.Settings.canDrawOverlays(this)) {
-                    Toast.makeText(this, "Overlay permission required! Please grant permission in settings.", Toast.LENGTH_LONG).show();
-                    return;
-                }
-            }
+            XposedBridge.log(TAG + ": Creating floating menu...");
             
             LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
             floatingView = inflater.inflate(R.layout.floating_mod_menu, null);
             
-            // Set up the floating window parameters
+            // Simple window parameters
             WindowManager.LayoutParams params = new WindowManager.LayoutParams();
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -68,28 +62,25 @@ public class ModMenuService extends Service {
                 params.type = WindowManager.LayoutParams.TYPE_PHONE;
             }
             
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                          WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
             params.format = PixelFormat.TRANSLUCENT;
             params.width = WindowManager.LayoutParams.WRAP_CONTENT;
             params.height = WindowManager.LayoutParams.WRAP_CONTENT;
             params.gravity = Gravity.TOP | Gravity.START;
-            params.x = 50;
+            params.x = 20;
             params.y = 100;
             
-            // Set up click listeners
             setupClickListeners();
             
             windowManager.addView(floatingView, params);
             isMenuVisible = true;
             
-            // Show a toast to confirm menu is active
-            Toast.makeText(this, "Mod Menu Active", Toast.LENGTH_SHORT).show();
+            XposedBridge.log(TAG + ": Floating menu created successfully!");
+            Toast.makeText(this, "Sword Master Mod Menu Active", Toast.LENGTH_SHORT).show();
             
         } catch (Exception e) {
-            // Log error and show toast
-            Toast.makeText(this, "Failed to show mod menu: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            e.printStackTrace();
+            XposedBridge.log(TAG + ": Error creating menu: " + e.getMessage());
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
     

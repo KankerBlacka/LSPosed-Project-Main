@@ -58,11 +58,16 @@ public class MainActivity extends AppCompatActivity {
     private void showDebugInfo() {
         StringBuilder debugInfo = new StringBuilder();
         debugInfo.append("=== DEBUG INFO ===\n");
-        debugInfo.append("Package: ").append(getPackageName()).append("\n");
-        debugInfo.append("Target: com.superplanet.swordmaster\n");
+        debugInfo.append("Module Package: ").append(getPackageName()).append("\n");
+        debugInfo.append("Target: Sword Master Story\n");
         debugInfo.append("Overlay Permission: ").append(android.provider.Settings.canDrawOverlays(this) ? "GRANTED" : "NOT GRANTED").append("\n");
-        debugInfo.append("Service Available: ").append(checkServiceAvailable() ? "YES" : "NO").append("\n");
-        debugInfo.append("==================");
+        debugInfo.append("Service Available: ").append(checkServiceAvailable() ? "YES" : "NO").append("\n\n");
+        debugInfo.append("=== HOW TO FIND PACKAGE NAME ===\n");
+        debugInfo.append("1. Install 'Package Name Viewer' app\n");
+        debugInfo.append("2. Or use ADB: adb shell pm list packages | grep sword\n");
+        debugInfo.append("3. Or check LSPosed logs for detected packages\n");
+        debugInfo.append("4. Look for packages containing 'sword' or 'superplanet'\n");
+        debugInfo.append("===============================");
         
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("Debug Information")
