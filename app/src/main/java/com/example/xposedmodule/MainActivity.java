@@ -35,11 +35,49 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+        
+        // Add debug button
+        Button debugButton = findViewById(R.id.debugButton);
+        if (debugButton != null) {
+            debugButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Show debug information
+                    showDebugInfo();
+                }
+            });
+        }
     }
     
     private boolean isXposedActive() {
         // This method will return false when running normally
         // It would return true only when the module is loaded by Xposed/LSPosed
         return false;
+    }
+    
+    private void showDebugInfo() {
+        StringBuilder debugInfo = new StringBuilder();
+        debugInfo.append("=== DEBUG INFO ===\n");
+        debugInfo.append("Package: ").append(getPackageName()).append("\n");
+        debugInfo.append("Target: com.superplanet.swordmaster\n");
+        debugInfo.append("Overlay Permission: ").append(android.provider.Settings.canDrawOverlays(this) ? "GRANTED" : "NOT GRANTED").append("\n");
+        debugInfo.append("Service Available: ").append(checkServiceAvailable() ? "YES" : "NO").append("\n");
+        debugInfo.append("==================");
+        
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Debug Information")
+               .setMessage(debugInfo.toString())
+               .setPositiveButton("OK", null)
+               .show();
+    }
+    
+    private boolean checkServiceAvailable() {
+        try {
+            // Try to create the service
+            Intent serviceIntent = new Intent(this, ModMenuService.class);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

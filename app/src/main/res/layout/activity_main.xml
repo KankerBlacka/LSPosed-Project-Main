@@ -56,6 +56,15 @@
                 android:layout_height="wrap_content"
                 android:text="Test Mod Menu"
                 android:textSize="14sp"
+                android:padding="12dp"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/debugButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Debug Info"
+                android:textSize="14sp"
                 android:padding="12dp" />
 
         </LinearLayout>

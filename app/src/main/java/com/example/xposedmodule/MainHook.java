@@ -15,7 +15,10 @@ public class MainHook implements IXposedHookLoadPackage {
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
         // Log that our module is loaded
-        XposedBridge.log(TAG + ": Module loaded for package: " + lpparam.packageName);
+        XposedBridge.log(TAG + ": ===== MODULE LOADED =====");
+        XposedBridge.log(TAG + ": Package: " + lpparam.packageName);
+        XposedBridge.log(TAG + ": Process: " + lpparam.processName);
+        XposedBridge.log(TAG + ": =========================");
         
         // Example: Hook into SystemUI to modify status bar
         if (lpparam.packageName.equals("com.android.systemui")) {
@@ -25,9 +28,11 @@ public class MainHook implements IXposedHookLoadPackage {
         
         // Example: Hook into specific apps (you can customize this)
         if (shouldHookPackage(lpparam.packageName)) {
-            XposedBridge.log(TAG + ": Hooking general methods for: " + lpparam.packageName);
+            XposedBridge.log(TAG + ": 🎯 TARGET PACKAGE DETECTED: " + lpparam.packageName);
+            XposedBridge.log(TAG + ": Setting up hooks for Sword Master...");
             hookGeneralMethods(lpparam);
             hookModMenuTrigger(lpparam);
+            hookAlternativeMethods(lpparam);
         }
     }
     
@@ -136,6 +141,75 @@ public class MainHook implements IXposedHookLoadPackage {
             
         } catch (Exception e) {
             XposedBridge.log(TAG + ": Error hooking Sword Master mod menu trigger: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private void hookAlternativeMethods(XC_LoadPackage.LoadPackageParam lpparam) {
+        try {
+            XposedBridge.log(TAG + ": Setting up alternative hooks for Sword Master...");
+            
+            // Hook Application.onCreate as backup
+            XposedHelpers.findAndHookMethod("android.app.Application", lpparam.classLoader, "onCreate", 
+                new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    XposedBridge.log(TAG + ": 🎮 Sword Master Application.onCreate called!");
+                    showModMenuFromContext(param.thisObject);
+                }
+            });
+            
+            // Hook Activity.onResume as another backup
+            XposedHelpers.findAndHookMethod("android.app.Activity", lpparam.classLoader, "onResume", 
+                new XC_MethodHook() {
+                @Override
+                protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                    android.app.Activity activity = (android.app.Activity) param.thisObject;
+                    XposedBridge.log(TAG + ": 🎮 Sword Master Activity.onResume: " + activity.getClass().getSimpleName());
+                    
+                    // Only show menu once per session
+                    if (!isMenuShown) {
+                        showModMenuFromContext(activity);
+                        isMenuShown = true;
+                    }
+                }
+            });
+            
+        } catch (Exception e) {
+            XposedBridge.log(TAG + ": Error setting up alternative hooks: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    private static boolean isMenuShown = false;
+    
+    private void showModMenuFromContext(Object contextObject) {
+        try {
+            Context context = null;
+            
+            if (contextObject instanceof Context) {
+                context = (Context) contextObject;
+            } else if (contextObject instanceof android.app.Activity) {
+                context = ((android.app.Activity) contextObject).getApplicationContext();
+            }
+            
+            if (context != null) {
+                XposedBridge.log(TAG + ": 🎮 Attempting to show mod menu from context...");
+                
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                    try {
+                        Intent serviceIntent = new Intent(context, ModMenuService.class);
+                        serviceIntent.setAction("SHOW_MENU");
+                        context.startService(serviceIntent);
+                        XposedBridge.log(TAG + ": ✅ Mod menu service started from alternative hook!");
+                    } catch (Exception e) {
+                        XposedBridge.log(TAG + ": ❌ Error in alternative hook: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }, 2000);
+            }
+        } catch (Exception e) {
+            XposedBridge.log(TAG + ": Error showing mod menu from context: " + e.getMessage());
             e.printStackTrace();
         }
     }
